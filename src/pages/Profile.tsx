@@ -3,15 +3,11 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router";
 import { useContext } from 'react';
 import { GlobalContext } from '../context/GlobalContext';
-import Navbar from "../components/Navbar.tsx";
-import ProductCard from "../components/ProductCard.tsx";
-import { Link } from "react-router";
 const Profile = () => {
 
     const { user : self } = useContext(GlobalContext);
 
     const [user,setUser] = useState<any>(null);
-    const [products,setProducts] = useState<any>(null);
 
     const { id } = useParams();
 
@@ -30,19 +26,6 @@ const Profile = () => {
         });
     }
 
-    const fetchProducts = (u:string) => {
-        axios.get(`http://localhost:3000/products/user/${u}`)
-        .then((response)=>{
-            return response.data;
-        })
-        .then((data)=>{
-            setProducts(data);
-        })
-        .catch((error)=>{
-            console.error(`Couldn't fetch products ->`,error);
-        })
-    }
-
     useEffect(()=>{
         if(id){
             fetchUser(id);
@@ -53,15 +36,8 @@ const Profile = () => {
         }
     },[self]);
 
-    useEffect(()=>{
-        if(user){
-            fetchProducts(user.id);
-        }
-    },[user]);
-
     return(
         <div>
-            <Navbar/>
             <div className="container w-full m-auto flex justify-center my-8">
                 <div className="w-full md:w-2/3 bg-white rounded-md p-8 shadow-lg border border-primary-300">
                     <>
@@ -80,27 +56,13 @@ const Profile = () => {
                                     <p>{user.email}</p>
                                 </div>
                             </div>
-                            <hr className="border-primary-300 my-2"/>
-                            <div className="space-y-2">
-                                <h3 className="font-bold">User Products</h3>
-                                <div>
-                                    {
-                                        products && products.length > 0 ? 
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                        {products.map((product:any,key:number)=>
-                                        <Link to={`/product/${product.id}`} key={key}><ProductCard product={product}/></Link>)}
-                                        </div>:
-                                        <div>User hasn't published anything yet.</div>
-                                    }
-                                </div>
-                            </div>
                         </>
                         :<></>
                         }
                     </>
                 </div>
             </div>
-        </div>
+    </div>
     )
 }
 export default Profile;

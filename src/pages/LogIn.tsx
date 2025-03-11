@@ -1,11 +1,12 @@
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useContext } from 'react';
 import { GlobalContext } from '../context/GlobalContext';
-import Navbar from "../components/Navbar.tsx";
 import { useForm } from 'react-hook-form';
 const LogIn = () => {
 
     const { user, tryLogIn, tryLogOut } = useContext(GlobalContext);
+
+    const navigate = useNavigate();
 
     const onSubmit = (data:any) => {
         const {id,email,password} = data;
@@ -20,7 +21,6 @@ const LogIn = () => {
 
     return(
         <div>
-            <Navbar/>
             <div className="container w-full m-auto flex justify-center my-8">
                 <div className="w-full md:w-2/3 bg-white rounded-md p-8 shadow-lg border border-primary-300">
                     {!user?<>
@@ -36,7 +36,10 @@ const LogIn = () => {
                         <div className="space-y-2">
                             <p>You are already logged in</p>
                             <p>{JSON.stringify(user)}</p>
-                            <button type="submit" onClick={tryLogOut} className="cursor-pointer bg-primary-900 text-primary-50 p-2 px-3 rounded-md text-sm">Log Out</button>
+                            <div className="space-x-2">
+                                <button type="submit" onClick={()=>{navigate(-1)}} className="std-button bg-primary-950">Go Back</button>
+                                <button type="submit" onClick={tryLogOut} className="std-button bg-primary-950">Log Out</button>
+                            </div>
                         </div>
                     </>}
                 </div>

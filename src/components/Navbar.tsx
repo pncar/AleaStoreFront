@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import { useContext } from 'react';
 import { GlobalContext } from '../context/GlobalContext';
 const Navbar = () => {
-    const { user, tryLogOut, getProtectedData, cart } = useContext(GlobalContext);
+    const { user, userOrders, tryLogOut, getProtectedData, cart } = useContext(GlobalContext);
 
     return(
         <div className="bg-white shadow-lg p-4">
@@ -13,7 +13,7 @@ const Navbar = () => {
                 <div className="flex-grow">
                     <ul className="space-x-2 flex items-center text-sm">
                         <li><Link to="/products">Products</Link></li>
-                        <li><Link to="/users">Users</Link></li>
+                        {user?.role === "admin" && <li><Link to="/users">Users</Link></li>}
                         <li><button onClick={getProtectedData} className="bg-gray-600 text-primary-50 p-2 px-4 rounded-md text-xs">Test</button></li>
                     </ul>
                 </div>
@@ -24,11 +24,12 @@ const Navbar = () => {
                             <Link to="/sign-up" className="std-button bg-sky-600">Sign In</Link>
                         </div>:
                         <div className="group relative w-full">
-                            <Link to="/login" className="relative text-sm">{user.name}</Link>
+                            <span className="relative text-sm">{user.name}</span>
                             <div className="overflow-hidden text-sm w-40 bg-primary-50 rounded-b-md border border-primary-300 hidden group-hover:block absolute origin-top-right">
                                 <Link to={`/profile/${user.id}`} className="std-dd-button">Profile</Link>
-                                <Link to={`/publish/`} className="std-dd-button">Publish</Link>
+                                {user?.role === "admin" ? <Link to={"/dashboard"} className="std-dd-button">Dashboard</Link> : <></>}
                                 <Link to={`/cart`} className="std-dd-button">Cart ({cart?.length})</Link>
+                                <Link to={`/orders`} className="std-dd-button">Orders ({userOrders?.length})</Link>
                                 <button onClick={tryLogOut} className="w-full p-2 cursor-pointer bg-primary-50 hover:bg-primary-100">Log Out</button>
                             </div>
                         </div>

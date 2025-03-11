@@ -1,15 +1,14 @@
 import { useState,useEffect } from "react";
-import axios from "axios";
-import Navbar from "../components/Navbar.tsx";
 import { Link } from "react-router";
+import api from "@/api/api.ts";
+
 const Users = () => {
     const [users,setUsers] = useState<any>(null);
-    const [userProducts,setUserProducts] = useState<any>([]);
     const [viewingUser,setViewingUser] = useState<number>(0);
 
     const fetchUsers = () => {
         setViewingUser(0);
-        axios.get(`http://localhost:3000/users`)
+        api.get(`/users/`)
         .then((response)=>{
             return response.data;
         })
@@ -21,32 +20,13 @@ const Users = () => {
         })
     }
 
-    const fetchUserProducts = (id:number) => {
-        axios.get(`http://localhost:3000/products/user/${id}`)
-        .then((response)=>{
-            return response.data
-        })
-        .then((data)=>{
-            console.log(data);
-            setUserProducts(data);
-        })
-        .catch((error)=>{
-            console.error(error);
-        })
-    }
-
     useEffect(()=>{
         fetchUsers();
     },[]);
 
-    useEffect(()=>{
-        if(users){
-            fetchUserProducts(users[viewingUser].id);
-        }
-    },[users,viewingUser]);
 
     const handleDelete = (id:number) => {
-        axios.post(`http://localhost:3000/users/${id}/delete`)
+        api.post(`/users/${id}/delete`)
         .then((response)=>{
             console.log(response);
         })
@@ -58,27 +38,19 @@ const Users = () => {
 
     return(
         <div>
-            <Navbar/>
             <div className="flex flex-wrap lg:flex-nowrap container w-full m-auto">
                 <div className="w-full p-8">
                     <div>
                         {
                             users ?
-                            <div className="p-3 rounded-md border border-primary-300 space-y-2">
-                                <div>{users[viewingUser].name}</div>
+                            <div className="p-6 px-8 rounded-md border border-primary-300 space-y-2">
+                                <div className="font-semibold">{users[viewingUser].name}</div>
                                 <div>{users[viewingUser].email}</div>
                                 <div>{users[viewingUser].phone}</div>
                                 <div className="flex space-x-2">
                                     <button onClick={()=>{handleDelete(users[viewingUser].id)}} className="bg-red-600 text-primary-50 rounded-md p-1 px-3 font-semibold text-xs cursor-pointer">Delete</button>
                                     <Link to={`/profile/${users[viewingUser].id}`} className="std-button bg-primary-900">Go to Profile</Link>
                                 </div>
-                                <hr className="border-primary-300"/>
-                                <>{userProducts && userProducts.map((product:any,key:number)=>
-                                    <div key={key}>
-                                        <Link to={`/product/${product.id}`}>{product.name}</Link>
-                                    </div>
-                                )}
-                                </>
                             </div>:
                             <></>
                         }

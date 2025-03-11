@@ -1,7 +1,6 @@
 import { Link, useNavigate } from "react-router";
 import { useContext } from 'react';
 import { GlobalContext } from '../context/GlobalContext.tsx';
-import Navbar from "../components/Navbar.tsx";
 import { useForm } from 'react-hook-form';
 import axios from "axios";
 import { faker } from '@faker-js/faker';
@@ -39,7 +38,6 @@ const SignUp = () => {
 
     return(
         <div>
-            <Navbar/>
             <div className="container w-full m-auto flex justify-center my-8">
                 <div className="w-full md:w-2/3 bg-white rounded-md p-8 shadow-lg border border-primary-300">
                     <div>
