@@ -1,22 +1,26 @@
 import { createContext, useState, useEffect, ReactNode } from 'react';
-import axios from "axios";
+import api from "@/api/api.ts";
 import { useNavigate } from "react-router";
+import Swal from "sweetalert2";
+import { faker }from "@faker-js/faker";
+import _ from "lodash";
 
 interface GlobalContextType {
-  user: any; 
-  cart: any[] | null;
-  userOrders: any[];
+  user: UserType|null|undefined; 
+  cart: {q:number, productType: ProductType}[] | null;
+  userOrders: OrderType[];
   totalPrice: number,
   totalPriceDiscounted: number,
-  addToCart: (item: string) => void;
-  setUser: (user: any) => void;
+  addToCart: (item: ProductType,qti?:number) => void;
+  setUser: (user: UserType) => void;
   tryLogIn: (id?: string, email?: string, password?: string) => void;
   tryLogOut: () => void;
-  getProtectedData: () => void;
+  //getProtectedData: () => void;
   clearCart: () => void;
   modifyItemInCart: (itemId: number, type: "increase" | "decrease") => void;
   fetchOrders: () => void;
   updateOrderStatus: (orderId: number, status: string) => void;
+  storeInfo: StoreSettingsType | null
 }
 
 const GlobalContext = createContext<GlobalContextType>({
@@ -25,24 +29,44 @@ const GlobalContext = createContext<GlobalContextType>({
   userOrders: [],
   totalPrice: 0,
   totalPriceDiscounted: 0,
-  addToCart: (item:string) => {},
+  addToCart: (item:ProductType,qti?:number) => {},
   setUser: () => {},
   tryLogIn: (id?: string, email?: string, paswsord?: string) => {},
   tryLogOut: () => {},
-  getProtectedData: () => {},
+  //getProtectedData: () => {},
   clearCart: () => {},
   modifyItemInCart: (itemId: number, type: "increase" | "decrease") => {},
   fetchOrders: () => {},
-  updateOrderStatus: (orderId: number, status: string) => {}
+  updateOrderStatus: (orderId: number, status: string) => {},
+  storeInfo: null
 });
 
 const GlobalProvider = ({ children }: { children: ReactNode }) => {
 
-  const [user, setUser] = useState<any>();
-  const [cart, setCart] = useState<any>([]);
-  const [userOrders, setUserOrders] = useState<any>([]);
+  const [user, setUser] = useState<UserType|null>();
+  const [cart, setCart] = useState<Array<{q: number, productType: ProductType}>>([]);
+  const [userOrders, setUserOrders] = useState<OrderType[]>([]);
   const [totalPrice,setTotalPrice] = useState(0); // FLAG - Probably reworked
   const [totalPriceDiscounted,setTotalPriceDiscounted] = useState(0);
+
+  const [storeInfo,setStoreInfo] = useState<StoreSettingsType|null>(null);
+
+  const fetchStoreInfo = () => {
+    api.get(`/store`)
+    .then((response)=>{
+      return response.data;
+    })
+    .then((data)=>{
+      setStoreInfo(data);
+    })
+    .catch((error)=>{
+      console.error(error);
+    })
+  }
+
+  useEffect(()=>{
+    fetchStoreInfo();
+  },[]);
 
   const navigate = useNavigate();
 
@@ -50,21 +74,23 @@ const GlobalProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (id: string, email: string, password: string) => {
     try {
-      const res = await axios.post("http://localhost:3000/auth/login", { id, email, password }, { withCredentials: true });
+      const res = await api.post("/auth/login", { id, email, password });
       console.log(res.data);
     } catch (err) {
       console.error("Login failed", err);
     }
   }
 
+  /* Currently not used
   const getProtectedData = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/auth/protected", { withCredentials: true });
+      const res = await api.get("/auth/protected");
       console.log(res.data);
     } catch (err) {
       console.error("Access denied", err);
     }
   }
+  */
 
   const tryLogIn = async (id: string = "1" , email: string = "test@example.com" , password: string = "password" ) => {
     await login(id,email,password);
@@ -73,7 +99,7 @@ const GlobalProvider = ({ children }: { children: ReactNode }) => {
 
   const tryLogOut = async () => {
     try{
-        const res = await axios.post(`http://localhost:3000/auth/logout`,null,{withCredentials: true});
+        const res = await api.post(`/auth/logout`,null);
         console.log(res.data);
         navigate(0);
     }catch (err) {
@@ -82,7 +108,7 @@ const GlobalProvider = ({ children }: { children: ReactNode }) => {
   } 
 
   const fetchUserData = async () => {
-    axios.post("http://localhost:3000/auth/fetch-user", null,  { withCredentials: true })
+    api.post("/auth/fetch-user", null)
     .then((response)=>{
         if(response.status === 200){
             return response.data;
@@ -92,8 +118,7 @@ const GlobalProvider = ({ children }: { children: ReactNode }) => {
         setUser(null);
     })
     .then((data)=>{
-        if(data){
-            console.log(data);
+        if(data && data.user){
             setUser(data.user);
         }
     })
@@ -108,30 +133,38 @@ const GlobalProvider = ({ children }: { children: ReactNode }) => {
 
   // --------------------- CART -------------------------
 
-  const addToCart = (insert:any) => {
-    const exists = cart.some((cartItem:any) => {return cartItem.productType.id === insert.id});
+  const addToCart = (insert:ProductType, qti: number = 1) => {
+    if(qti < 1 || qti > 99){
+      console.error(`Trying to add invalid amount of items`);
+      return;
+    }
+    const exists = cart.some((cartItem:{q: number, productType: ProductType}) => {return cartItem.productType.id === insert.id});
     if(!exists){
-      setCart([...cart,{q: 1, productType:insert}]);
+      setCart([...cart,{q: qti, productType:insert}]);
     }else{
-      setCart(cart.map((cartItem:any)=>{
+      setCart(cart.map((cartItem:{q: number, productType: ProductType})=>{
         if(cartItem.productType.id === insert.id){
-          return { ...cartItem, q: cartItem.q + 1 };
+          return { ...cartItem, q: cartItem.q + qti };
         }
         else{
-          console.log("b");
           return cartItem;
         }
       }));
     }
+    Swal.fire({
+      title: "Product added to Cart",
+      icon: 'success',
+      confirmButtonText: "Ok"
+    })
   }
 
   const modifyItemInCart = (itemId: number, type: "increase" | "decrease" = "increase") => {
-    const exists = cart.some((cartItem: any) => { return itemId === cartItem.productType.id });
+    const exists = cart.some((cartItem: {q: number, productType: ProductType}) => { return itemId === cartItem.productType.id });
     if(!exists){
       console.error("No item");
       return;
     }
-    setCart(cart.map((cartItem:any)=>{
+    setCart(cart.map((cartItem:{q: number, productType: ProductType})=>{
         if(cartItem.productType.id === itemId){
           if(type === "decrease"){
             if(cartItem.q >= 2){
@@ -142,8 +175,8 @@ const GlobalProvider = ({ children }: { children: ReactNode }) => {
           }
         }
         return cartItem;
-      }
-    ).filter((item:any)=>{return item !== null}));
+      }//@ts-ignore
+    ).filter((item:{q: number, productType: ProductType})=>{return item !== null}));
   }
 
   const clearCart = () => {
@@ -166,27 +199,30 @@ const GlobalProvider = ({ children }: { children: ReactNode }) => {
   // --------------------- ORDERS -------------------------
 
   const fetchOrders = () => {
-    axios.get(`http://localhost:3000/orders/user/${user.id}`, {withCredentials: true})
-    .then((response)=>{
-        return response.data;
-    })
-    .then((data)=>{
-        console.log(`http://localhost:3000/orders/user/${user.id}`);
-        setUserOrders(data);
-    })
-    .catch((error)=>{
-        console.error(`Error fetching orders ->`,error);
-    })
+    if(user){
+      api.get(`/orders/user/${user.id}`)
+      .then((response)=>{
+          return response.data;
+      })
+      .then((data)=>{
+          //console.log(`/orders/user/${user.id}`);
+          setUserOrders(data);
+      })
+      .catch((error)=>{
+          console.error(`Error fetching orders ->`,error);
+      })
+    }
   }
 
   const updateOrderStatus = (orderId: number, status: string) => {
-      axios.post(`http://localhost:3000/orders/${orderId}/update-status`,{value: status}, {withCredentials: true})
+      api.patch(`/orders/${orderId}/`,{value: status})
       .then((response)=>{
           return response;
       })
       .then((data)=>{
-          console.log(data);
-          fetchOrders();
+          if(user){
+            fetchOrders();
+          }
       })
       .catch((error)=>{
           console.log(`Error updating order ->`,error);
@@ -196,7 +232,7 @@ const GlobalProvider = ({ children }: { children: ReactNode }) => {
   useEffect(()=>{
       let r = 0;
       let s = 0;
-      cart?.map((item:any)=>{
+      cart?.map((item:{q: number, productType: ProductType})=>{
           r += item.q * item.productType.price;
           s += item.q * item.productType.discounted_price;
       });
@@ -209,7 +245,7 @@ const GlobalProvider = ({ children }: { children: ReactNode }) => {
   },[user]);
 
   return (
-    <GlobalContext.Provider value={{ user, cart, userOrders, totalPrice, totalPriceDiscounted, addToCart, setUser, tryLogIn, tryLogOut, getProtectedData, clearCart, modifyItemInCart, fetchOrders, updateOrderStatus }}>
+    <GlobalContext.Provider value={{ user, cart, userOrders, totalPrice, totalPriceDiscounted, addToCart, setUser, tryLogIn, tryLogOut, clearCart, modifyItemInCart, fetchOrders, updateOrderStatus, storeInfo }}>
       {children}
     </GlobalContext.Provider>
   );

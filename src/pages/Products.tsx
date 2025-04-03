@@ -1,15 +1,9 @@
 import { useState,useEffect } from "react";
-import axios from "axios";
-import { Link } from "react-router";
+import api from "@/api/api.ts";
 import ProductCard from "../components/ProductCard.tsx";
-import { useForm } from 'react-hook-form';
+import { useForm, SubmitHandler, FieldValues } from 'react-hook-form';
+import { useParams, useNavigate } from "react-router";
 
-interface SearchParams {
-    name: string | null;
-    limit: number;
-    offset: number;
-    order: "l" | "o" | "pl" | "ph" | null;
-}
 
 const Products = () => {
 
@@ -18,16 +12,36 @@ const Products = () => {
     const [totalProducts,setTotalProducts] = useState<number>(0);
     const [pages,setPages] = useState<number[]>([]);
 
-    const [searchParams,setSearchParams] = useState({
-        name: "",
+    const { categoryId } = useParams();
+    const navigate = useNavigate();
+
+    console.log(categoryId);
+
+    type SearchParamType = {
+        subject: string;
+        limit: number;
+        offset: number;
+        order: string;
+        price_lt: string;
+        price_gt: string;
+        categories: string[] | number[]
+    }
+
+    const initialState = {
+        subject: "",
         limit: 10,
         offset: 0,
-        order: "l"
-    });
+        order: "l",
+        price_lt: "",
+        price_gt: "",
+        categories: []
+    };
+
+    const [searchParams,setSearchParams] = useState<SearchParamType>(initialState);
 
     const fetchProducts = () => {
         const params = searchParams;
-        axios.get(`http://localhost:3000/products`,{params})
+        api.get(`/products`,{params})
         .then((response)=>{
             return response.data;
         })
@@ -41,7 +55,7 @@ const Products = () => {
     }
 
     const fetchCategories = () => {
-        axios.get(`http://localhost:3000/categories`)
+        api.get(`/categories`)
         .then((response)=>{
             return response.data
         })
@@ -53,10 +67,36 @@ const Products = () => {
         })
     }
 
+    const updateParams:SubmitHandler<FieldValues> = (data) => {
+        const { subject, min, max, order, categories } = data;
+        setSearchParams({...searchParams,subject, order, offset: 0, price_gt: min, price_lt: max, categories: [categories]});
+    }
+
+    useEffect(()=>{
+        fetchCategories();
+    },[]);
+
     useEffect(()=>{
         fetchProducts();
-        //fetchCategories();
+        if(categoryId && searchParams.categories.length > 0 && !(searchParams.categories as string[]).includes(categoryId)){
+            navigate(`/products/`);
+        }
     },[searchParams]);
+
+    useEffect(()=>{
+        if(categoryId){
+            setSearchParams({...searchParams,categories: [categoryId]});
+        }else{
+            setSearchParams(initialState);
+        }
+    },[categoryId]);
+
+    /* 
+    Currently not using this real-time thing
+    useEffect(()=>{
+        fetchProducts();
+    },[searchParams]);
+    */
 
 
     const {
@@ -77,34 +117,45 @@ const Products = () => {
 
     return(
         <div className="">
-            <div className="min-h-screen container w-full lg:w-2/3 m-auto p-2 lg:p-8 space-y-2">
+            <div className="min-h-screen container w-full 2xl:w-2/3 m-auto p-2 lg:p-8 space-y-2">
                 <div className="">
                     <div className="space-y-2">
                         <div className="bg-white border border-primary-300 flex p-6">
-                            <form className="w-full flex flex-col space-y-2 items-center">
+                            <form onSubmit={handleSubmit(updateParams)} className="w-full flex flex-col space-y-2 items-center">
                                 <div className="w-full flex items-center h-10">
-                                    <input {...register('search',{onChange: (e)=>{setSearchParams({...searchParams,name:e.target.value,offset:0});}})} type="text" className="h-full focus:outline-0 w-full p-2 px-4 rounded-l-md border border-primary-300"/>
-                                    <button type="submit" className="bg-sky-600 h-full w-32 rounded-r-md text-primary-50 font-semibold cursor-pointer">Search</button>
+                                    <input {...register('subject')} type="text" className="h-full focus:outline-0 w-full p-2 px-4 rounded-md border border-primary-300"/>
                                 </div>
                                 <div className="w-full flex space-x-2">
                                     <div className="flex h-10 space-x-2">
-                                        <input {...register('price-min')} type="number" placeholder={"Minimum"} className="h-full p-2 px-4 rounded-md border border-primary-300"/>
-                                        <input {...register('price-max')} type="number" placeholder={"Maximum"} className="h-full p-2 px-4 rounded-md border border-primary-300"/>
-                                        <button type="submit" className="h-full std-button bg-sky-600">Apply</button>
+                                        <input {...register('min')} type="number" min={0} placeholder={"Minimum"} className="h-full p-2 px-4 rounded-md border border-primary-300"/>
+                                        <input {...register('max')} type="number" min={0} placeholder={"Maximum"} className="h-full p-2 px-4 rounded-md border border-primary-300"/>
                                     </div>
                                     <div>
-                                        <select {...register('order')} onChange={(e)=>{setSearchParams({...searchParams,order:e.target.value})}} className="h-10 border border-primary-300 rounded-md p-2 px-3">
+                                        <select {...register('order')} className="h-10 border border-primary-300 rounded-md p-2 px-3">
                                             <option value={"l"}>Newest</option>
                                             <option value={"o"}>Oldest</option>
                                             <option value={"pl"}>Lowest Price</option>
                                             <option value={"ph"}>Highest Price</option>
                                         </select>
                                     </div>
+                                    <div>
+                                        <select {...register('categories')} className="h-10 border border-primary-300 rounded-md p-2 px-3">
+                                            <option value={0}>All</option>
+                                            {
+                                                categories.map((category:CategoryType)=>
+                                                    <option key={category.id} value={category.id}>{category.name}</option>
+                                                )
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="w-full">
+                                    <button type="submit" className="bg-sky-600 h-full w-32 rounded-md p-2 text-primary-50 font-semibold cursor-pointer">Search</button>
                                 </div>
                             </form>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                        {products.map((product:any,key:number)=>
+                        {products.map((product:ProductType,key:number)=>
                             <ProductCard product={product} key={key}/>
                         )}
                         </div>

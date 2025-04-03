@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
-import { useForm } from "react-hook-form";
+import api from "@/api/api.ts";
+import { useForm, SubmitHandler, FieldValues } from "react-hook-form";
 import { Link } from "react-router";
 
 const Sections = () => {
 
-    const [sections,setSections] = useState<any>([]);
+    const [sections,setSections] = useState<SectionType[]>([]);
 
     const {
         register,
@@ -14,7 +14,7 @@ const Sections = () => {
     } = useForm();
 
     const fetchSections = () => {
-        axios.get(`http://localhost:3000/sections/`,{withCredentials:true})
+        api.get(`/sections/`)
         .then((response)=>{
             return response.data;
         })
@@ -25,9 +25,9 @@ const Sections = () => {
             console.error(error);
         })
     }
-    const createSection = (data:any) => {
+    const createSection:SubmitHandler<FieldValues> = (data) => {
         const { name } = data;
-        axios.post(`http://localhost:3000/sections/create`,{name},{withCredentials:true})
+        api.post(`/sections/`,{name})
         .then((response)=>{
             return response.data;
         })
@@ -61,7 +61,7 @@ const Sections = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {sections.map((section:any)=>
+                            {sections.map((section:SectionType)=>
                                 <tr key={section.id}>
                                     <td>
                                         {section.id}

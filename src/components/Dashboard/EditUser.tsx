@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router";
-import axios from "axios";
-import { useForm } from "react-hook-form";
+import api from "@/api/api.ts";
+import { useForm, SubmitHandler, FieldValues } from "react-hook-form";
 import Swal from "sweetalert2";
 const EditUser = () => {
     const { id } = useParams();
-    const [user,setUser] = useState<any>(null);
+    const [user,setUser] = useState<UserType|null>(null);
 
     const {
         register,
@@ -14,12 +14,12 @@ const EditUser = () => {
     } = useForm();
 
     const fetchUser = () => {
-        axios.get(`http://localhost:3000/users/${id}`,{withCredentials:true})
+        api.get(`/users/${id}`)
         .then((response)=>{
             return response.data;
         })
         .then((data)=>{
-            setUser(data[0]);
+            setUser(data);
         })
         .catch((error)=>{
             console.error(error);
@@ -30,9 +30,9 @@ const EditUser = () => {
         fetchUser();
     },[]);
 
-    const updateUser = (data:any) => {
+    const updateUser:SubmitHandler<FieldValues> = (data) => {
         const {name, email, phone, role} = data;
-        axios.post(`http://localhost:3000/users/${id}/update`,{name, email, phone, role },{withCredentials:true})
+        api.patch(`/users/${id}`,{name, email, phone, role })
         .then((response)=>{
             return response.data;
         })

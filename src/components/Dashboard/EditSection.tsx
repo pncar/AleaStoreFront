@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
-import { useForm } from "react-hook-form";
+import api from "@/api/api.ts";
+import { useForm, SubmitHandler, FieldValues } from "react-hook-form";
 import { useParams, useNavigate } from "react-router";
+import Swal from "sweetalert2";
 const EditSection = () => {
     const { id } = useParams();
 
-    const [section,setSection] = useState<any>();
-    const [allCategories,setAllCategories] = useState<any>([]);
+    const [section,setSection] = useState<SectionType>();
+    const [allCategories,setAllCategories] = useState<CategoryType[]>([]);
     const [associatedCategories,setAssociatedCategories] = useState([]);
 
     const navigate = useNavigate();
@@ -18,12 +19,12 @@ const EditSection = () => {
     } = useForm();
 
     const fetchSection = () => {
-        axios.get(`http://localhost:3000/sections/${id}`,{withCredentials:true})
+        api.get(`/sections/${id}`)
         .then((response)=>{
             return response.data;
         })
         .then((data)=>{
-            setSection(data[0]);
+            setSection(data);
         })
         .catch((error)=>{
             console.error(error);
@@ -31,7 +32,7 @@ const EditSection = () => {
     }
 
     const fetchAllCategories = () => {
-        axios.get(`http://localhost:3000/categories/`,{withCredentials:true})
+        api.get(`/categories/`)
         .then((response)=>{
             return response.data;
         })
@@ -44,7 +45,7 @@ const EditSection = () => {
     }
 
     const fetchAssociatedCategories = () => {
-        axios.get(`http://localhost:3000/sections/${id}/categories`,{withCredentials:true})
+        api.get(`/sections/${id}/categories`)
         .then((response)=>{
             return response.data;
         })
@@ -62,44 +63,21 @@ const EditSection = () => {
         fetchAssociatedCategories();
     },[]);
 
-    const addCategory = (data:any) => {
-        const { sectionId } = data;
-        axios.post(`http://localhost:3000/sections/add-category/`,{sectionId, categoryId: data.categoryId},{withCredentials:true})
-        .then((response)=>{
-            return response.data;
-        })
-        .then((data)=>{
-            console.log(data);
-            fetchAssociatedCategories();
-        })
-        .catch((error)=>{
-            console.error(error);
-        })
-    }
-
-    const updateSection = (data:any) => {
+    const updateSection:SubmitHandler<FieldValues> = (data) => {
         const { name } = data;
         console.log(`ID -> ${id}, NAME -> ${name}`);
-        axios.post(`http://localhost:3000/sections/${id}/update`,{name},{withCredentials:true})
+        api.patch(`/sections/${id}`,{name})
         .then((response)=>{
             return response.data;
         })
         .then((data)=>{
             console.log(data);
-        })
-        .catch((error)=>{
-            console.error(error);
-        })
-    }
-
-    const removeCategory = (sectionId: number, categoryId: number) => {
-        axios.post(`http://localhost:3000/sections/remove-category/`,{sectionId,categoryId},{withCredentials:true})
-        .then((response)=>{
-            return response.data;
-        })
-        .then((data)=>{
-            console.log(data);
-            fetchAssociatedCategories();
+            Swal.fire({
+                title: 'Category Updated Successfully',
+                text: data.message,
+                icon: 'success',
+                confirmButtonText: 'Ok'
+            })
         })
         .catch((error)=>{
             console.error(error);
@@ -107,13 +85,42 @@ const EditSection = () => {
     }
 
     const deleteSection = () => {
-        axios.post(`http://localhost:3000/sections/${id}/delete`,null,{withCredentials:true})
+        api.delete(`/sections/${id}`)
         .then((response)=>{
             return response.data;
         })
         .then((data)=>{
             console.log(data);
             navigate(`/dashboard/sections`);
+        })
+        .catch((error)=>{
+            console.error(error);
+        })
+    }
+
+    const addCategory:SubmitHandler<FieldValues> = (data) => {
+        const { sectionId } = data;
+        api.post(`/sections/${sectionId}/categories`,{categoryId: data.categoryId})
+        .then((response)=>{
+            return response.data;
+        })
+        .then((data)=>{
+            console.log(data);
+            fetchAssociatedCategories();
+        })
+        .catch((error)=>{
+            console.error(error);
+        })
+    }
+
+    const removeCategory = (sectionId: number, categoryId: number) => {
+        api.delete(`/sections/${sectionId}/categories/${categoryId}`)
+        .then((response)=>{
+            return response.data;
+        })
+        .then((data)=>{
+            console.log(data);
+            fetchAssociatedCategories();
         })
         .catch((error)=>{
             console.error(error);
@@ -128,7 +135,7 @@ const EditSection = () => {
                 <form onSubmit={handleSubmit(addCategory)} className="flex space-x-1">
                     <input {...register("sectionId")} value={id} type="hidden"/>
                     <select {...register("categoryId")} className="std-input">
-                        {allCategories?.map((option:any)=>
+                        {allCategories?.map((option:CategoryType)=>
                             <option key={option.id} value={option.id}>{option.name}</option>
                         )}
                     </select>
@@ -149,7 +156,7 @@ const EditSection = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {associatedCategories?.map((category:any)=>
+                    {associatedCategories?.map((category:CategoryType)=>
                         <tr key={category.id}>
                             <td>{category.id}</td><td>{category.name}</td><td><button onClick={()=>{removeCategory(Number(id),category.id)}} className="std-button bg-red-600">Remove</button></td>
                         </tr>

@@ -1,12 +1,13 @@
 import Order from "../components/Order.tsx";
-import { useState, useEffect, useContext } from "react";
+import { useContext } from "react";
 import { GlobalContext } from "../context/GlobalContext";
-import axios from "axios";
+import { Link } from "react-router";
+import api from "@/api/api.ts";
 import Swal from 'sweetalert2';
 
 const Cart = () => {
 
-    const { user, cart, totalPrice, totalPriceDiscounted, userOrders, clearCart, modifyItemInCart, fetchOrders, updateOrderStatus } = useContext(GlobalContext);
+    const { user, cart, totalPrice, totalPriceDiscounted, userOrders, clearCart, modifyItemInCart, fetchOrders } = useContext(GlobalContext);
 
     const finish = () => {
         const i = cart?.map((item)=>{
@@ -14,13 +15,14 @@ const Cart = () => {
         })
         
         const o = {
-        name: "Order",
-        total: totalPrice,
-        list: i,
-        user
+            name: "Order",
+            total: totalPrice,
+            list: i,
+            user
         }
 
-        axios.post(`http://localhost:3000/orders/create`,{userId:o.user.id,total:o.total,list:o.list}, { withCredentials: true })
+        //@ts-ignore
+        api.post(`/orders`,{userId:o.user.id,total:o.total,list:o.list})
         .then((response)=>{
             return response.data
         })
@@ -45,7 +47,7 @@ const Cart = () => {
         <div>
             <div className="container w-full m-auto flex justify-center my-8">
                 <div className="w-full md:w-2/3 bg-white rounded-md p-8 shadow-lg border border-primary-300">
-                    {user && cart?
+                    {user && cart && cart.length > 0 ?
                     <>
                         <div className="py-2">
                             <h3 className="font-semibold">{user.name}'s Cart</h3>
@@ -66,7 +68,7 @@ const Cart = () => {
                             </thead>
                             <tbody>
                             {
-                                cart.map((cartItem:any,key:number)=>
+                                cart.map((cartItem:{q: number, productType: ProductType},key:number)=>
                                     <tr key={key} className="border-b border-primary-200 odd:bg-primary-100">
                                         <td className="p-4">
                                             <div className="flex space-x-2">
@@ -99,7 +101,7 @@ const Cart = () => {
                         <div>
                             <h3 className="font-semibold my-3">User Orders</h3>
                             <div className="space-y-2">
-                                {userOrders && userOrders.map((order:any)=>
+                                {userOrders && userOrders.map((order:OrderType)=>
                                     <Order key={order.id} order={order}/>
                                 )}
                             </div>
@@ -107,6 +109,10 @@ const Cart = () => {
                     </>
                     :
                     <>
+                        <div className="space-y-4">
+                            <p>No items in cart yet</p>
+                            <Link to={`/products`} className="std-button bg-primary-950">Go to Store</Link>
+                        </div>
                     </>
                     }
                 </div>

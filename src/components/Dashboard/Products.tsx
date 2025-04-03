@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "@/api/api.ts";
 import { Link } from "react-router";
 import Publish from "../../components/Publish.tsx"; // Temporarily set it like this
 
@@ -8,7 +8,7 @@ const Products = () => {
     const [products,setProducts] = useState([]);
 
     const fetchProducts = () => {
-        axios.get(`http://localhost:3000/products`,{withCredentials:true})
+        api.get(`/products`)
         .then((response)=>{
             return response.data;
         })
@@ -45,7 +45,7 @@ const Products = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {products.length > 0 && products.map((product:any)=>
+                        {products.length > 0 && products.map((product:ProductType)=>
                             <tr key={product.id}>
                                 <td>{product.id}</td>
                                 <td><img className="w-full h-24 object-cover" src={product.image ? `http://localhost:3000/uploads/${product.image}` : `https://www.svgrepo.com/show/508699/landscape-placeholder.svg`}/></td>

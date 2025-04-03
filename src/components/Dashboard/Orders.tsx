@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "@/api/api.ts";
 
 const Orders = () => {
 
     const [orders,setOrders] = useState([]);
 
-    const [viewDetails,setViewDetails] = useState<any>(null);
+    const [viewDetails,setViewDetails] = useState<OrderItemType[]|null>([]);
 
     const fetchOrders = () => {
-        axios.get(`http://localhost:3000/orders`,{withCredentials:true})
+        api.get(`/orders`)
         .then((response)=>{
             return response.data;
         })
@@ -34,7 +34,7 @@ const Orders = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {orders.map((order:any)=>
+                        {orders.map((order:OrderType)=>
                             <tr key={order.id}>
                                 <td>
                                     {order.id}
@@ -65,7 +65,7 @@ const Orders = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {viewDetails.map((orderItem:any)=>
+                        {viewDetails.map((orderItem:OrderItemType)=>
                             <tr key={orderItem.id}>
                                 <td>
                                     {orderItem.id}

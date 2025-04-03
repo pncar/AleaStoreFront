@@ -1,10 +1,10 @@
-import axios from "axios";
+import api from "@/api/api.ts";
 import { useState, useEffect } from "react";
-import { useForm }from "react-hook-form";
+import { useForm, SubmitHandler, FieldValues }from "react-hook-form";
 const AddCategory = (props: {productId: number, onCategoryAdded: () => void}) => {
 
     const { productId, onCategoryAdded } = props;
-    const [categories,setCategories] = useState<any>([]);
+    const [categories,setCategories] = useState<CategoryType[]>([]);
 
     const {
         register,
@@ -13,7 +13,7 @@ const AddCategory = (props: {productId: number, onCategoryAdded: () => void}) =>
     } = useForm();
 
     const fetchCategories = () => {
-        axios.get(`http://localhost:3000/categories`,{withCredentials: true})
+        api.get(`/categories`)
         .then((response)=>{
             return response.data;
         })
@@ -29,9 +29,9 @@ const AddCategory = (props: {productId: number, onCategoryAdded: () => void}) =>
         fetchCategories();
     },[]);
 
-    const add = (data:any) => {
+    const add:SubmitHandler<FieldValues> = (data) => {
         console.log(`trying to set category ${data.category} on product ${productId}`);
-        axios.post(`http://localhost:3000/products/set-category`,{categoryId: data.category, productId},{withCredentials:true})
+        api.post(`/products/${productId}/categories`,{categoryId: data.category})
         .then((response)=>{
             return response.data;
         })
@@ -49,7 +49,7 @@ const AddCategory = (props: {productId: number, onCategoryAdded: () => void}) =>
             {categories.length > 0 &&
             <form onSubmit={handleSubmit(add)} className="flex items-center h-10 space-x-2">
                 <select {...register("category")} defaultValue={categories[0].id} className="std-input h-full">
-                    {categories.map((category:any)=>
+                    {categories.map((category:CategoryType)=>
                         <option key={category.id} value={category.id}>{category.name}</option>
                     )}
                 </select>

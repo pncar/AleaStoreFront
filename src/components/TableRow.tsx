@@ -1,5 +1,5 @@
 import { ReactNode, useState, useRef } from "react";
-const TableRow = ({children, order}:{children: ReactNode, order: any}) => {
+const TableRow = ({children, order}:{children: ReactNode, order: OrderType}) => {
 
     const tableRef = useRef(null);
     const [selected,setSelected] = useState<boolean>(false);

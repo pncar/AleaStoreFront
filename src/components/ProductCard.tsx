@@ -3,14 +3,14 @@ import { useState, useEffect, useContext } from "react";
 import { GlobalContext } from "../context/GlobalContext.tsx";
 import Price from "../components/Price.tsx";
 
-const ProductCard = (props: {product: any}) => {
+const ProductCard = (props: {product: ProductType}) => {
     const { product } = props;
     const { cart, addToCart } = useContext(GlobalContext);
     const [inCart,setInCart] = useState(0);
 
     useEffect(()=>{
         if(cart){
-            cart.map((cartItem:any)=>{
+            cart.map((cartItem:{q:number,productType:ProductType})=>{
                 if(cartItem.productType.id === product.id){
                     setInCart(cartItem.q);
                 }

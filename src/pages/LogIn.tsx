@@ -1,14 +1,14 @@
 import { Link, useNavigate } from "react-router";
 import { useContext } from 'react';
 import { GlobalContext } from '../context/GlobalContext';
-import { useForm } from 'react-hook-form';
+import { useForm, SubmitHandler, FieldValues } from 'react-hook-form';
 const LogIn = () => {
 
     const { user, tryLogIn, tryLogOut } = useContext(GlobalContext);
 
     const navigate = useNavigate();
 
-    const onSubmit = (data:any) => {
+    const onSubmit:SubmitHandler<FieldValues> = (data) => {
         const {id,email,password} = data;
         tryLogIn(id,email,password);
     }
@@ -27,10 +27,10 @@ const LogIn = () => {
                     <h3 className="font-bold text-xl font-sky-600 p-2">Log In</h3>
                     <form onSubmit={handleSubmit(onSubmit)} className="p-2 space-y-2">
                         <input {...register('email')}  type="text" defaultValue="user@gmail.com" placeholder="Your Mail" className="w-full bg-primary-200 p-2 px-3 rounded-md border border-primary-300 focus:border-primary-600 transition-all"/>
-                        <input  {...register('passord')} type="password" defaultValue="password" placeholder="Your Password" className="w-full bg-primary-200 p-2 px-3 rounded-md border border-primary-300 focus:border-primary-600 transition-all"/>
-                        <button type="submit" className="cursor-pointer bg-primary-900 text-primary-50 p-2 px-3 rounded-md text-sm">Log In</button>
+                        <input  {...register('password')} type="password" defaultValue="password" placeholder="Your Password" className="w-full bg-primary-200 p-2 px-3 rounded-md border border-primary-300 focus:border-primary-600 transition-all"/>
+                        <button type="submit" className="std-button bg-primary-950">Log In</button>
                     </form>
-                    <p className="py-2 text-xs">Don't have an account? <Link to="/sign-up" className="font-bold text-sky-600 block text-sm">Sign In</Link></p>
+                    <p className="py-2 text-xs">Don't have an account? <Link to="/sign-up" className="font-bold text-sky-600 block text-sm">Sign Up</Link></p>
                     </>:
                     <>
                         <div className="space-y-2">

@@ -1,19 +1,19 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "@/api/api.ts";
 import ProductCard from "../components/ProductCard.tsx";
 
-const CategorySection = (props: { id: number }) => {
-    const { id } = props;
-    const [sectionData,setSectionData] = useState<any>(null);
-    const [products,setProducts] = useState<any>(null);
+const CategorySection = (props: { id: number, q?: number }) => {
+    const { id, q = 5 } = props;
+    const [sectionData,setSectionData] = useState<SectionType|null>(null);
+    const [products,setProducts] = useState<ProductType[]>([]);
 
     const fetchSectionData = () => {
-        axios.get(`http://localhost:3000/sections/${id}`,{withCredentials:true})
+        api.get(`/sections/${id}`)
         .then((response)=>{
             return response.data;
         })
         .then((data)=>{
-            setSectionData(data[0]);
+            setSectionData(data);
         })
         .catch((error)=>{
             console.log(error);
@@ -21,7 +21,7 @@ const CategorySection = (props: { id: number }) => {
     }
 
     const fetchProducts = () => {
-        axios.get(`http://localhost:3000/products`,{params: {categories: sectionData.categories, limit: 5}})
+        api.get(`/products`,{params: {categories: sectionData?.categories, limit: q}})
         .then((response)=>{
             return response.data;
         })
@@ -49,8 +49,8 @@ const CategorySection = (props: { id: number }) => {
             {sectionData ? 
             <>
             <h3 className="text-primary-900 font-bold text-xl">{sectionData.name}</h3>
-            <div className="grid grid-cols-2 xl:grid-cols-5 gap-2">
-                {products?.map((product:any,key:number)=>
+            <div className={`grid gap-2`} style={{gridTemplateColumns: `repeat(${window.innerWidth > 1024 ? q : 2}, minmax(0, 1fr))`}}>
+                {products?.map((product:ProductType,key:number)=>
                     <ProductCard key={key} product={product}/>
                 )}
             </div>

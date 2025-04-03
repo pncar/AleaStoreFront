@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { GlobalContext } from "../context/GlobalContext.tsx";
-const Order = (props: { order: any}) => {
+const Order = (props: { order: OrderType}) => {
     const { order } = props;
 
     const { updateOrderStatus } = useContext(GlobalContext);
@@ -14,7 +14,7 @@ const Order = (props: { order: any}) => {
                     <button onClick={()=>{updateOrderStatus(order.id,"cancelled")}} className="std-button bg-red-600">Cancel</button>
                 </div>
             </div>
-            {order.items.length > 0 ?
+            {order.items && order.items.length > 0 ?
             <>
             <table className="table-fixed w-full text-xs border-collapse border-y border-sky-300 shadow-md rounded-md">
                 <thead className="bg-sky-50 font-semibold">
@@ -25,7 +25,7 @@ const Order = (props: { order: any}) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {order.items.map((item:any)=>
+                    {order.items?.map((item:OrderItemType)=>
                         <tr key={item.id} className="border-b border-primary-200 last:border-0">
                             <td className="p-2">{item.name}</td>
                             <td className="p-2 text-right">{item.quantity}</td>

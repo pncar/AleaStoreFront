@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "@/api/api.ts";
 import CreateDiscount from "../../components/CreateDiscount.tsx";
 import { Link } from "react-router";
 const Discounts = () => {
@@ -11,7 +11,7 @@ const Discounts = () => {
     },[]);
 
     const fetchDiscounts = () => {
-        axios.get(`http://localhost:3000/discounts`,{withCredentials:true})
+        api.get(`/discounts`)
         .then((response)=>{
             return response.data;
         })
@@ -35,7 +35,7 @@ const Discounts = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {discounts.map((discount:any)=>
+                        {discounts.map((discount:DiscountType)=>
                         <tr key={discount.id} className="">
                             <td>
                                 {discount.id}

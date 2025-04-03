@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
-import { useForm } from 'react-hook-form';
+import api from "@/api/api.ts";
+import { useForm, SubmitHandler, FieldValues} from 'react-hook-form';
 import {faker} from "@faker-js/faker";
 import _ from "lodash";
 const CreateDiscount = (props: {onDiscountCreated: () => void}) => {
@@ -16,9 +15,9 @@ const CreateDiscount = (props: {onDiscountCreated: () => void}) => {
         return n.toLocaleDateString();
     }
 
-    const submitDiscount = (data:any) => {
+    const submitDiscount:SubmitHandler<FieldValues> = (data) => {
         const {name,rate} = data;
-        axios.post(`http://localhost:3000/discounts/create`,{rate: rate, name: name},{withCredentials: true})
+        api.post(`/discounts/`,{rate: rate, name: name})
         .then((response)=>{
             return response.data
         })

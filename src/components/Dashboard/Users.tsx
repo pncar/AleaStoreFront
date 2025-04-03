@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "@/api/api.ts";
 import { Link } from "react-router";
 
 const Users = () => {
 
-    const [users,setUsers] = useState([]);
+    const [users,setUsers] = useState<UserType[]>([]);
 
     const fetchUsers = () => {
-        axios.get(`http://localhost:3000/users`,{withCredentials:true})
+        api.get(`/users`)
         .then((response)=>{
             return response.data;
         })
@@ -33,7 +33,7 @@ const Users = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {users.map((user:any)=>
+                        {users.map((user:UserType)=>
                             <tr key={user.id}>
                                 <td>{user.id}</td>
                                 <td>{user.name}</td>

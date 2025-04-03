@@ -1,19 +1,19 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "@/api/api.ts";
 import { Link , useParams, useNavigate } from "react-router";
 import { FaX } from "react-icons/fa6";
 import AddDiscount from "../../components/AddDiscount.tsx";
 import AddCategory from "../../components/AddCategory.tsx";
-import { useForm } from 'react-hook-form';
+import { useForm, SubmitHandler, FieldValues } from 'react-hook-form';
 import Swal from "sweetalert2";
 
 const EditProduct = () => {
     const { id } = useParams();
     const navigate = useNavigate();
 
-    const [product,setProduct] = useState<any>();
-    const [associatedDiscounts,setAssociatedDiscounts] = useState<any>([]);
-    const [associatedCategories,setAssociatedCategories] = useState<any>([]);
+    const [product,setProduct] = useState<ProductType>();
+    const [associatedDiscounts,setAssociatedDiscounts] = useState<DiscountType[]>([]);
+    const [associatedCategories,setAssociatedCategories] = useState<CategoryType[]>([]);
 
     const [image,setImage] = useState<File | null>(null);
 
@@ -24,12 +24,12 @@ const EditProduct = () => {
     } = useForm();
 
     const fetchProduct = () => {
-        axios.get(`http://localhost:3000/products/${id}`,{withCredentials: true})
+        api.get(`/products/${id}`)
         .then((response)=>{
             return response.data;
         })
         .then((data)=>{
-            setProduct(data[0]);
+            setProduct(data);
         })
         .catch((error)=>{
             console.error(`Error fetching product ${id} ->`,error);
@@ -37,7 +37,7 @@ const EditProduct = () => {
     }
 
     const fetchAssociatedDiscounts = () => {
-        axios.get(`http://localhost:3000/discounts/product/${id}`,{withCredentials: true})
+        api.get(`/discounts/product/${id}`)
         .then((response)=>{
             return response.data;
         })
@@ -50,7 +50,7 @@ const EditProduct = () => {
     }
 
     const removeDiscountFromProduct = (discountId: number) => {
-        axios.post(`http://localhost:3000/products/remove-discount`,{productId: id, discountId },{withCredentials: true})
+        api.delete(`/products/${id}/discounts/${discountId}`)
         .then((response)=>{
             return response.data;
         })
@@ -64,7 +64,7 @@ const EditProduct = () => {
     }
 
     const fetchAssociatedCategories = () => {
-        axios.get(`http://localhost:3000/categories/product/${id}`,{withCredentials: true})
+        api.get(`/categories/product/${id}`)
         .then((response)=>{
             return response.data;
         })
@@ -77,7 +77,7 @@ const EditProduct = () => {
     }
 
     const removeCategoryFromProduct = (categoryId: number) => {
-        axios.post(`http://localhost:3000/products/remove-category`,{productId: id, categoryId },{withCredentials: true})
+        api.delete(`/products/${id}/categories/${categoryId}`)
         .then((response)=>{
             return response.data;
         })
@@ -108,7 +108,7 @@ const EditProduct = () => {
         fetchProduct();
     }
 
-    const updateData = (data:any) => {
+    const updateData:SubmitHandler<FieldValues> = (data) => {
         const {name,price,description} = data;
         const formData = new FormData();
 
@@ -119,7 +119,7 @@ const EditProduct = () => {
             formData.append("image",image);
         }
 
-        axios.post(`http://localhost:3000/products/${id}/update`,formData,{withCredentials:true})
+        api.patch(`/products/${id}`,formData)
         .then((response)=>{
             return response.data;
         })
@@ -140,6 +140,25 @@ const EditProduct = () => {
                 icon: 'error',
                 confirmButtonText: 'Ok'
             });
+        })
+    }
+
+    const deleteProduct = (id:number) => {
+        api.delete(`/products/${id}`)
+        .then((response)=>{
+            return response.data
+        })
+        .then(()=>{
+            Swal.fire({
+                title: 'Unpublished',
+                text: 'Product was successfully deleted.',
+                icon: 'success',
+                confirmButtonText: 'Ok'
+            });
+            navigate("/products");
+        })
+        .catch((error)=>{
+            console.error(`Error deleting product`,error);
         })
     }
 
@@ -194,7 +213,7 @@ const EditProduct = () => {
                                     <div className="flex flex-col space-x-2 std-panel">
                                         <AddDiscount productId={product.id} onDiscountAdded={handleDiscountAdded}/>
                                         <div className="w-32">
-                                        {associatedDiscounts.map((discount:any)=>
+                                        {associatedDiscounts.map((discount:DiscountType)=>
                                             <div key={discount.id} className="flex flex-col items-center p-4 bg-primary-300 rounded-md relative">
                                                 <FaX onClick={()=>{removeDiscountFromProduct(discount.id)}} className="cursor-pointer right-2 top-2 text-xs absolute text-primary-600 hover:text-primary-900 transition-all"/>
                                                 <p className="text-xs uppercase">{discount.name} <span className="font-bold">{discount.rate}%</span></p>
@@ -208,12 +227,21 @@ const EditProduct = () => {
                                     <div className="flex flex-col space-x-2 std-panel">
                                         <AddCategory productId={product.id} onCategoryAdded={handleCategoryAdded}/>
                                         <div className="flex space-x-2">
-                                        {associatedCategories.map((category:any)=>
+                                        {associatedCategories.map((category:CategoryType)=>
                                             <div key={category.id} className="flex flex-col items-center p-4 bg-primary-300 rounded-md relative">
                                                 <FaX onClick={()=>{removeCategoryFromProduct(category.id)}} className="cursor-pointer right-2 top-2 text-xs absolute text-primary-600 hover:text-primary-900 transition-all"/>
                                                 <p className="text-xs px-2">{category.name}</p>
                                             </div>
                                         )}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="space-y-2 w-full">
+                                    <p>Extra</p>
+                                    <div className="flex flex-col space-x-2 std-panel">
+                                        <div className="space-x-2">
+                                            <Link to={`/product/${product.id}`} className="std-button bg-primary-600">View</Link>
+                                            <button onClick={()=>{deleteProduct(product.id)}} className="std-button bg-red-600">Delete</button>
                                         </div>
                                     </div>
                                 </div>

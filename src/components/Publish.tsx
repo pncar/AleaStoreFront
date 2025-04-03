@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useContext } from 'react';
 import { GlobalContext } from '../context/GlobalContext';
-import axios from "axios";
-import { useForm } from 'react-hook-form';
+import api from "@/api/api.ts";
+import { useForm, SubmitHandler, FieldValues } from 'react-hook-form';
 import { useNavigate } from "react-router";
 import Swal from 'sweetalert2';
 import { faker } from "@faker-js/faker";
@@ -12,7 +12,7 @@ const Publish = (props: {onHandlePublish?: () => void}) => {
     const { onHandlePublish } = props;
     const { user } = useContext(GlobalContext);
 
-    const [categories,setCategories] = useState<any>([]);
+    const [categories,setCategories] = useState<CategoryType[]>([]);
     const [image,setImage] = useState<File | null>(null);
 
     const navigate = useNavigate();
@@ -24,7 +24,7 @@ const Publish = (props: {onHandlePublish?: () => void}) => {
     } = useForm();
 
     useEffect(()=>{
-        axios.get(`http://localhost:3000/categories`)
+        api.get(`/categories`)
         .then((response)=>{
             return response.data;
         })
@@ -36,7 +36,7 @@ const Publish = (props: {onHandlePublish?: () => void}) => {
         })
     },[]);
 
-    const submitPublish = (data:any) => {
+    const submitPublish:SubmitHandler<FieldValues> = (data) => {
         const {name,description,price,category,userId} = data;
         console.log(data);
         const formData = new FormData();
@@ -64,7 +64,7 @@ const Publish = (props: {onHandlePublish?: () => void}) => {
             });
             return false;
         }
-        axios.post(`http://localhost:3000/products/create`,formData,{ withCredentials: true})
+        api.post(`/products`,formData)
         .then((response)=>{
             console.log(response);
             return response;
@@ -106,7 +106,7 @@ const Publish = (props: {onHandlePublish?: () => void}) => {
                             <input defaultValue={_.capitalize(faker.lorem.word())} {...register('name',{required: "Product Name is required"})} type="text" placeholder={"Product Name"} className="p-2 px-3 rounded-md border border-primary-300"/>
                             <input defaultValue={faker.number.int(100)*100} {...register('price',{required: "Price is required"})} type="number" min={1} max={10000} className="text-right p-2 px-3 rounded-md border border-primary-300"/>
                             <select {...register('category',{required: "Category is required"})} defaultValue={1} className="p-2 px-3 rounded-md border border-primary-300">
-                                {categories.map((category:any,key:number)=><option key={key} value={category.id}>{category.name}</option>)}
+                                {categories.map((category:CategoryType,key:number)=><option key={key} value={category.id}>{category.name}</option>)}
                             </select>
                             {image && 
                                 <div className="relative group">

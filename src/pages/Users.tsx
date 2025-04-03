@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import api from "@/api/api.ts";
 
 const Users = () => {
-    const [users,setUsers] = useState<any>(null);
+    const [users,setUsers] = useState<UserType[]>([]);
     const [viewingUser,setViewingUser] = useState<number>(0);
 
     const fetchUsers = () => {
@@ -42,7 +42,7 @@ const Users = () => {
                 <div className="w-full p-8">
                     <div>
                         {
-                            users ?
+                            users[viewingUser] ?
                             <div className="p-6 px-8 rounded-md border border-primary-300 space-y-2">
                                 <div className="font-semibold">{users[viewingUser].name}</div>
                                 <div>{users[viewingUser].email}</div>
@@ -65,7 +65,7 @@ const Users = () => {
                             </tr>
                             </thead>
                             <tbody>
-                            {users.map((user:any,key:number)=>
+                            {users.map((user:UserType,key:number)=>
                                 <tr key={key} className={`${viewingUser === key ? "bg-sky-100 hover:bg-sky-50" : ""} transition-all hover:bg-primary-100 cursor-pointer`} onClick={()=>{setViewingUser(key)}}>
                                     <td className="p-2 px-4 border-b border-primary-200">
                                         {user.name}

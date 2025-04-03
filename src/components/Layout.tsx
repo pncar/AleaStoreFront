@@ -1,10 +1,11 @@
 import { ReactNode } from "react";
 import Navbar from "../components/Navbar.tsx";
+import NavbarNew from "../components/NavbarNew.tsx";
 import Footer from "../components/Footer.tsx";
 const Layout = ({children}: { children: ReactNode }) => {
     return(
         <div className="bg-primary-50">
-            <Navbar/>
+            <NavbarNew/>
             <div className="min-h-screen">
                 {children}
             </div>

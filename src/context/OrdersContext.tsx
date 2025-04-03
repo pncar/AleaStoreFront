@@ -1,6 +1,4 @@
-import { createContext, useState, useEffect, ReactNode } from 'react';
-import axios from "axios";
-import { useNavigate } from "react-router";
+import { createContext, useState, ReactNode } from 'react';
 
 interface OrdersContextType {
     userOrders: any[];
@@ -12,7 +10,7 @@ const OrdersContext = createContext<OrdersContextType>({
 
 const OrdersProvider = ({ children }: { children: ReactNode}) => {
 
-    const [userOrders,setUserOrders] = useState<any>([]);
+    const [userOrders] = useState<any>([]);
 
 
     return(
